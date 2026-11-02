@@ -799,3 +799,35 @@ textarea:focus{border-color:var(--gold-deep);outline:none}
 .duo-now h5{color:#FFFFFF}
 .duo-now p{color:#F4FAEC}
 .duo-now .where{color:#DCEFBB}
+
+/* ============================================================
+ * 移动端（≤767）：画卷 4:1 在窄屏只剩一条，改用「三张椅子卡」
+ * 原因：16:9 裁切会把左右两把椅子裁掉，只剩中间一把
+ * ============================================================ */
+.chair-cards{display:none}
+.ccard{width:100%;display:flex;align-items:center;gap:14px;padding:10px;
+  background:#fff;border:1px solid var(--line);border-radius:16px;text-align:left;cursor:pointer;
+  box-shadow:0 8px 22px -16px rgba(107,74,47,.6);transition:.2s}
+.ccard:active{transform:scale(.99)}
+.cc-bg{width:104px;height:104px;border-radius:12px;background-size:cover;background-position:center;flex:none;
+  box-shadow:inset 0 0 0 1px rgba(107,74,47,.12)}
+.cc-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.cc-tx b{font-family:var(--serif);font-size:19px;color:var(--red-deep);letter-spacing:.02em}
+.cc-tx i{font-style:normal;font-size:12.5px;color:var(--soil)}
+.cc-tx em{font-style:normal;font-size:11.5px;color:#8a765a}
+.cc-go{width:26px;height:26px;border-radius:50%;background:rgba(200,68,42,.1);color:var(--red-deep);
+  display:flex;align-items:center;justify-content:center;flex:none}
+.cc-go svg{width:14px;height:14px}
+.cc-note{text-align:center;font-size:11px;color:#9c8a70;margin-top:2px;letter-spacing:.02em}
+
+@media (max-width:767px){
+  .pano-wrap{display:none}
+  .chair-cards{display:flex;flex-direction:column;gap:12px;padding:0 12px;margin-top:14px}
+}
+
+/* 移动端导航：隐藏冗余的「研学成果报告」（页内已有两处入口），让 5 个面包屑一行放得下 */
+@media (max-width:767px){
+  .nav .nav-link.report{display:none}
+  .nav .crumbs{gap:4px}
+  .crumb{font-size:10.5px;padding:4px 8px}
+}

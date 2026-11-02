@@ -191,6 +191,15 @@ function viewHome(){
     </div>
     <p class="pano-cap">图为 AI 概念化示意，非历史照片 · 点击椅子进入对应故事</p>
   </div>
+
+  <div class="chair-cards">
+    ${CHAIRS.slice().sort((a,b)=>a.hot-b.hot).map(c=>`<button class="ccard" data-go="${c.id}" aria-label="进入${c.name}">
+      <span class="cc-bg ${c.img}"></span>
+      <span class="cc-tx"><b>${c.name}</b><i>${c.person}</i><em>${c.tag}</em></span>
+      <span class="cc-go">${icEnter()}</span>
+    </button>`).join('')}
+    <p class="cc-note">图为 AI 概念化示意，非历史照片 · 点击卡片进入对应故事</p>
+  </div>
   <div class="river"><div class="rope"><div class="line"></div>${knots}</div></div>
   <p class="river-hint">点击画卷上的椅子，或沿着红绸的节点，走进每一段红色乡村故事</p>
   <div class="tour-wrap"><button class="tour" data-tour>
