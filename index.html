@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>椅座·红乡 · 红色乡村数字研学平台</title>
+<meta name="description" content="以三把椅子为叙事入口的红色乡村数字研学平台：物件观察、史料阅读、事件排序、农业农村关联与知识测验，生成研学成果报告。">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23C8442A'/><path d='M9 22 L9 11 M9 11 Q9 7 13 7 L19 7 Q23 7 23 11 L23 22 M9 12 L23 12 M9 19 L23 19' stroke='%23F4C96B' stroke-width='2.4' fill='none' stroke-linecap='round'/><path d='M7 25 L25 25' stroke='%23F4C96B' stroke-width='2' stroke-linecap='round'/></svg>">
+<link rel="stylesheet" href="css/style.css?v=20261105b">
+<script>
+/* 演示模式：默认开启（静态部署 / 双击打开 / ?demo=1），保证评委打开即可完整使用；
+   本地联调后端时在地址后加 ?server=1 即切回服务端模式 */
+(function(){
+  var forceServer=/(^|[?&])server=1/.test(location.search||'');
+  window.RRX_DEMO = !forceServer;
+  if(window.RRX_DEMO) document.documentElement.setAttribute('data-demo','1');
+})();
+</script>
+<style>
+/* 图片路径在此一并声明，供静态发布扫描识别；视觉规则主体在 css/style.css */
+.bg-pano{background-image:url('assets/images/panorama.jpg')}
+.bg-jianshou{background-image:url('assets/images/base_jianshou.jpg')}
+.bg-fumin{background-image:url('assets/images/base_fumin.jpg')}
+.bg-dangjia{background-image:url('assets/images/base_dangjia.jpg')}
+.bg-jianshou-past{background-image:url('assets/images/base_jianshou_past.jpg')}
+.bg-fumin-past{background-image:url('assets/images/base_fumin_past.jpg')}
+.bg-dangjia-past{background-image:url('assets/images/base_dangjia_past.jpg')}
+</style>
+</head>
+<body>
+<div class="bg-tex" aria-hidden="true"></div>
+<nav class="nav" aria-label="主导航">
+  <button class="logo" data-nav="home">
+    <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="var(--red)"/><path d="M9 22 L9 11 M9 11 Q9 7 13 7 L19 7 Q23 7 23 11 L23 22 M9 12 L23 12 M9 19 L23 19" stroke="#F4C96B" stroke-width="2.4" fill="none" stroke-linecap="round"/><path d="M7 25 L25 25" stroke="#F4C96B" stroke-width="2" stroke-linecap="round"/></svg>
+    椅座·红乡
+  </button>
+  <div class="nav-right">
+    <div class="crumbs" id="crumbs"></div>
+    <button class="nav-link report" data-open-report>研学成果报告</button>
+    <button class="nav-link account" id="rrxAccountBtn">登录 / 个人中心</button>
+  </div>
+</nav>
+<div id="view-root" aria-live="polite"></div>
+<div id="intro-overlay" class="intro-overlay" aria-hidden="true"></div>
+
+<script src="js/data.js?v=20261105b"></script>
+<script src="js/api.js?v=20261105b"></script>
+<script>
+// 启动：从后端拉取内容；若后端未启动，则用内置 data.js 兜底并提示启动服务
+window.RRX_BOOT().then(function(){
+  var s=document.createElement('script');
+  s.src='js/app.js?v=20261105b';
+  document.body.appendChild(s);
+}).catch(function(){
+  var s=document.createElement('script');
+  s.src='js/app.js?v=20261105b';
+  document.body.appendChild(s);
+});
+</script>
+<script>
+/* 账号：独立登录 / 注册页（依赖后端服务；后端未启动时给出提示） */
+(function(){
+  var USER_KEY='rrx_user_v2';
+  var ov=null, tab='login', busy=false, unsubSync=null, pendingNotice='';
+
+  function readUser(){ try{ var s=localStorage.getItem(USER_KEY); return s?JSON.parse(s):null; }catch(e){ return null; } }
+  function writeUser(u){ try{ if(u) localStorage.setItem(USER_KEY,JSON.stringify(u)); else localStorage.removeItem(USER_KEY); }catch(e){} }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  function apiBase(){ return (window.RRX_API&&window.RRX_API.base)||''; }
+
+  var BRAND_HTML='<aside class="auth-brand">'
+    +'<div class="ab-logo">'
+      +'<svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="rgba(247,234,209,.14)"/><path d="M9 22 L9 11 M9 11 Q9 7 13 7 L19 7 Q23 7 23 11 L23 22 M9 12 L23 12 M9 19 L23 19" stroke="#F4C96B" stroke-width="2.4" fill="none" stroke-linecap="round"/><path d="M7 25 L25 25" stroke="#F4C96B" stroke-width="2" stroke-linecap="round"/></svg>'
+      +'椅座·红乡'
+    +'</div>'
+    +'<h2>一把椅子，<br>一程<em>乡村</em>。</h2>'
+    +'<p class="ab-slogan">坐下的位置，站着的农民。<br>从物件观察走到史料阅读，把三段红色乡村的人物故事，变成可以带走、可以同步的研学成果。</p>'
+    +'<div class="ab-list">'
+      +'<div class="ab-item"><i></i><span><b>坚守之椅</b>焦裕禄 · 兰考</span></div>'
+      +'<div class="ab-item"><i></i><span><b>富民之椅</b>邓小平 · 广安</span></div>'
+      +'<div class="ab-item"><i></i><span><b>当家之椅</b>申纪兰 · 西沟</span></div>'
+    +'</div>'
+    +'<div class="ab-footer">2026 四川省大学生农业创意设计大赛 · 赛道三</div>'
+  +'</aside>';
+
+  function formView(){
+    return '<div class="auth-shell" role="dialog" aria-modal="true" aria-label="登录或注册账号">'
+      +BRAND_HTML
+      +'<section class="auth-body">'
+        +'<div class="ab-top">'
+          +'<div><h3 id="auTitle">登录</h3><p id="auSub">登录后可恢复研学进度与成果报告。</p></div>'
+          +'<button type="button" class="auth-close" data-act="close" aria-label="关闭">✕</button>'
+        +'</div>'
+        +'<div class="auth-tabs" role="tablist">'
+          +'<button type="button" role="tab" data-tab="login" class="on" aria-selected="true">登录</button>'
+          +'<button type="button" role="tab" data-tab="register" aria-selected="false">注册</button>'
+        +'</div>'
+        +'<form class="auth-form" id="auForm" novalidate>'
+          +'<div class="auth-field" id="fNick" style="display:none">'
+            +'<label for="auNick">昵称（选填）</label>'
+            +'<input id="auNick" type="text" maxlength="16" placeholder="用于区分账号与研学报告" autocomplete="nickname">'
+            +'<div class="tip">不超过 16 个字，可留空</div>'
+          +'</div>'
+          +'<div class="auth-field" id="fPhone">'
+            +'<label for="auPhone">手机号</label>'
+            +'<input id="auPhone" type="tel" inputmode="numeric" maxlength="11" placeholder="请输入 11 位手机号" autocomplete="tel">'
+          +'</div>'
+          +'<div class="auth-field" id="fPass">'
+            +'<label for="auPass">密码</label>'
+            +'<input id="auPass" type="password" maxlength="20" placeholder="不少于 6 位" autocomplete="current-password">'
+          +'</div>'
+          +'<div class="auth-err" id="auErr" role="alert"></div>'
+          +'<button type="submit" class="btn btn-primary auth-submit" id="auSubmit">登录</button>'
+        +'</form>'
+        +'<div class="auth-mode" id="auMode"><span class="dot"></span><span id="auModeTxt">正在检测后端服务…</span></div>'
+        +'<div class="auth-alt" id="auAlt">还没有账号？<button type="button" data-switch="register">立即注册</button></div>'
+      +'</section>'
+    +'</div>';
+  }
+
+  function userView(u){
+    var nick=(u&&u.nickname)||'研学同学';
+    var phoneTxt=(u&&u.phone)||'';
+    var initial=nick.replace(/[^\u4e00-\u9fa5A-Za-z0-9]/g,'').slice(0,1)||'学';
+    return '<div class="auth-shell" role="dialog" aria-modal="true" aria-label="个人中心">'
+      +BRAND_HTML
+      +'<section class="auth-body">'
+        +'<div class="ab-top">'
+          +'<div><h3>个人中心</h3><p>已登录，研学进度与成果报告会保存到服务端数据库。</p></div>'
+          +'<button type="button" class="auth-close" data-act="close" aria-label="关闭">✕</button>'
+        +'</div>'
+        +'<div class="auth-user"><div class="avatar">'+esc(initial)+'</div>'
+          +'<div class="meta"><b>'+esc(nick)+'</b><span>'+(phoneTxt?'手机号 '+esc(phoneTxt):'未绑定手机号')+'</span></div>'
+        +'</div>'
+        +'<div class="auth-rows">'
+          +'<div class="row"><span>同步状态</span><b id="auSyncState">—</b></div>'
+          +'<div class="row"><span>最近同步</span><b id="auSyncAt">—</b></div>'
+          +'<div class="row"><span>同步内容</span><b>研学进度 · 成果报告</b></div>'
+          +'<div class="row"><span>服务地址</span><b>'+esc(apiBase())+'</b></div>'
+        +'</div>'
+        +'<div class="report-actions">'
+          +'<button type="button" class="btn btn-primary" data-act="sync">立即同步</button>'
+          +'<button type="button" class="btn btn-ghost" data-act="pull">拉取服务端进度</button>'
+          +'<button type="button" class="btn btn-ghost" data-act="logout">退出登录</button>'
+          +'<button type="button" class="btn btn-ghost" data-act="close">关闭</button>'
+          +((u&&u.role==='admin')?'<button type="button" class="btn btn-ghost" data-act="admin">内容管理后台</button>':'')
+        +'</div>'
+        +'<div class="au-archive">'
+          +'<div class="au-archive-h"><span>我的研学档案</span><b id="auArchiveCount">加载中…</b></div>'
+          +'<div id="auArchiveList" class="au-archive-list">正在读取…</div>'
+        +'</div>'
+      +'</section>'
+    +'</div>';
+  }
+
+  function onKey(e){ if(e.key==='Escape'){ closeAuth(); } }
+
+  function closeAuth(){
+    if(!ov) return;
+    if(unsubSync){ unsubSync(); unsubSync=null; }
+    document.removeEventListener('keydown',onKey);
+    var o=ov; ov=null;
+    o.classList.remove('show');
+    setTimeout(function(){ o.remove(); },220);
+  }
+
+  function setTab(t){
+    if(!ov) return;
+    tab=t;
+    var tabs=ov.querySelectorAll('[data-tab]');
+    for(var i=0;i<tabs.length;i++){
+      var on=tabs[i].getAttribute('data-tab')===t;
+      tabs[i].classList.toggle('on',on);
+      tabs[i].setAttribute('aria-selected',on?'true':'false');
+    }
+    var nick=ov.querySelector('#fNick');
+    if(nick) nick.style.display=(t==='register')?'':'none';
+    var title=ov.querySelector('#auTitle'), sub=ov.querySelector('#auSub');
+    var submit=ov.querySelector('#auSubmit'), alt=ov.querySelector('#auAlt');
+    var pass=ov.querySelector('#auPass');
+    if(t==='register'){
+      title.textContent='注册';
+      sub.textContent='创建账号后，研学进度与成果报告会随账号同步。';
+      submit.textContent='注册并登录';
+      alt.innerHTML='已有账号？<button type="button" data-switch="login">直接登录</button>';
+      if(pass) pass.setAttribute('autocomplete','new-password');
+      var nickInput=ov.querySelector('#auNick'); if(nickInput&&nickInput.focus) nickInput.focus();
+    }else{
+      title.textContent='登录';
+      sub.textContent='登录后可恢复研学进度与成果报告。';
+      submit.textContent='登录';
+      alt.innerHTML='还没有账号？<button type="button" data-switch="register">立即注册</button>';
+      if(pass) pass.setAttribute('autocomplete','current-password');
+    }
+    clearErr();
+  }
+
+  function clearErr(){
+    if(!ov) return;
+    var e=ov.querySelector('#auErr');
+    if(e){ e.classList.remove('show'); e.textContent=''; }
+    var fields=ov.querySelectorAll('.auth-field');
+    for(var i=0;i<fields.length;i++) fields[i].classList.remove('bad');
+  }
+
+  function showErr(msg, fieldId){
+    if(!ov) return;
+    clearErr();
+    var e=ov.querySelector('#auErr');
+    if(e){ e.textContent=msg; e.classList.add('show'); }
+    if(fieldId){ var f=ov.querySelector('#'+fieldId); if(f) f.classList.add('bad'); }
+  }
+
+  function setBusy(b){
+    busy=b;
+    if(!ov) return;
+    var s=ov.querySelector('#auSubmit');
+    if(s){
+      s.disabled=b;
+      s.textContent=b?(tab==='register'?'注册中…':'登录中…'):(tab==='register'?'注册并登录':'登录');
+    }
+    var tabs=ov.querySelectorAll('[data-tab]');
+    for(var i=0;i<tabs.length;i++) tabs[i].disabled=b;
+  }
+
+  function setMode(ok){
+    if(!ov) return;
+    var m=ov.querySelector('#auMode'), txt=ov.querySelector('#auModeTxt');
+    if(!m||!txt) return;
+    if(ok===null){ m.className='auth-mode'; txt.textContent='正在检测后端服务…'; return; }
+    m.className='auth-mode '+(ok?'online':'offline');
+    txt.textContent=ok?'服务已连接，登录后进度与报告会保存到数据库':'服务未连接：请先启动后端（start.bat）';
+  }
+
+  function probe(){
+    var base=apiBase();
+    if(!base){ setMode(false); return; }
+    setMode(null);
+    var done=false;
+    var timer=setTimeout(function(){ if(done) return; done=true; setMode(false); },3000);
+    fetch(base+'/api/health',{cache:'no-store'}).then(function(r){
+      if(done) return; done=true; clearTimeout(timer); setMode(r.ok);
+    }).catch(function(){
+      if(done) return; done=true; clearTimeout(timer); setMode(false);
+    });
+  }
+
+  function submit(){
+    if(busy||!ov) return;
+    var phoneEl=ov.querySelector('#auPhone');
+    var passEl=ov.querySelector('#auPass');
+    var nickEl=ov.querySelector('#auNick');
+    var phone=phoneEl?phoneEl.value.trim():'';
+    var pass=passEl?passEl.value:'';
+    var nick=nickEl&&tab==='register'?nickEl.value.trim():'';
+    clearErr();
+    if(!/^1[3-9]\d{9}$/.test(phone)){ showErr('请输入正确的 11 位手机号','fPhone'); if(phoneEl) phoneEl.focus(); return; }
+    if(pass.length<6){ showErr('密码不少于 6 位','fPass'); if(passEl) passEl.focus(); return; }
+    if(tab==='register'&&nick.length>16){ showErr('昵称不超过 16 个字','fNick'); return; }
+    setBusy(true);
+    var req=(tab==='register')
+      ?window.RRX_API.register(phone,pass,nick)
+      :window.RRX_API.login(phone,pass);
+    req.then(function(r){
+      window.RRX_API.setToken(r.token);
+      writeUser(r.user);
+      setBusy(false);
+      updateBtn();
+      closeAuth();
+      if(window.RRX_SYNC) window.RRX_SYNC.reset();
+      afterLogin();
+    }).catch(function(e){
+      setBusy(false);
+      var msg=(e&&e.message)||'操作失败';
+      if(/Failed to fetch|NetworkError|Load failed|Network request failed/i.test(msg)){
+        msg='无法连接后端服务（'+apiBase()+'）。请先运行 start.bat 启动后端。';
+      }
+      showErr(msg);
+    });
+  }
+
+  function openAuth(startTab){
+    closeAuth();
+    tab=(startTab==='register')?'register':'login';
+    ov=document.createElement('div');
+    ov.className='auth-overlay';
+    ov.id='authOv';
+    ov.innerHTML=window.RRX_API.isLoggedIn()?userView(readUser()):formView();
+    document.body.appendChild(ov);
+    requestAnimationFrame(function(){
+      if(!ov) return;
+      ov.classList.add('show');
+      var first=ov.querySelector('#auPhone')||ov.querySelector('.auth-close');
+      if(first){ try{ first.focus({preventScroll:true}); }catch(e){ first.focus(); } }
+    });
+    document.addEventListener('keydown',onKey);
+
+    var form=ov.querySelector('#auForm');
+    if(form) form.addEventListener('submit',function(e){ e.preventDefault(); submit(); });
+    var inputs=ov.querySelectorAll('input');
+    for(var i=0;i<inputs.length;i++){
+      inputs[i].addEventListener('input',function(){ clearErr(); });
+    }
+
+    ov.addEventListener('click',function(e){
+      if(e.target===ov){ closeAuth(); return; }
+      var hit=e.target.closest('[data-act],[data-tab],[data-switch]');
+      if(!hit) return;
+      var act=hit.getAttribute('data-act');
+      if(act==='close'){ closeAuth(); return; }
+      if(act==='logout'){
+        window.RRX_API.logout(); writeUser(null);
+        if(window.RRX_SYNC) window.RRX_SYNC.reset();
+        updateBtn(); closeAuth(); return;
+      }
+      if(act==='pull'){ pullCloud(); return; }
+      if(act==='sync'){ if(window.RRX_SYNC) window.RRX_SYNC.flush(); return; }
+      if(act==='admin'){ window.open('admin.html','_blank','noopener'); return; }
+      var tb=hit.getAttribute('data-tab')||hit.getAttribute('data-switch');
+      if(tb&&!busy) setTab(tb);
+    });
+
+    if(window.RRX_API.isLoggedIn()){
+      loadArchive();
+      if(window.RRX_SYNC){
+        refreshSync();
+        unsubSync=window.RRX_SYNC.subscribe(refreshSync);
+      }
+    }else{
+      probe();
+    }
+    if(pendingNotice){ showErr(pendingNotice); pendingNotice=''; }
+  }
+
+  /* ---- 同步状态与策略 ---- */
+  function fmtTime(ts){
+    if(!ts) return '—';
+    var d=new Date(ts);
+    function p(n){ return (n<10?'0':'')+n; }
+    return p(d.getHours())+':'+p(d.getMinutes())+':'+p(d.getSeconds());
+  }
+  function refreshSync(){
+    if(!ov||!window.RRX_SYNC) return;
+    var s=window.RRX_SYNC.status();
+    var el=ov.querySelector('#auSyncState'), at=ov.querySelector('#auSyncAt');
+    if(!el) return;
+    var txt='', cls='';
+    if(s.state==='syncing') txt='正在同步…';
+    else if(s.state==='error'){ txt='同步失败 · '+s.error; cls='bad'; }
+    else if(s.state==='ok'){ txt=s.pending?'已同步 · 有新改动待上传':'已同步'; if(!s.pending) cls='ok'; }
+    else txt=s.pending?'有改动待同步':'等待首次同步';
+    el.textContent=txt;
+    el.className=cls;
+    if(at) at.textContent=fmtTime(s.lastAt);
+  }
+  /* 个人研学档案：从服务端拉取该账号已保存的历史报告 */
+  function loadArchive(){
+    if(!ov||!window.RRX_API) return;
+    var box=ov.querySelector('#auArchiveList'), cnt=ov.querySelector('#auArchiveCount');
+    if(!box) return;
+    window.RRX_API.listReports().then(function(d){
+      var arr=(d&&d.reports)||[];
+      if(cnt) cnt.textContent=arr.length+' 份';
+      if(!arr.length){
+        box.innerHTML='<div class="au-arc-empty">还没有保存的报告。完成研学后在「研学成果报告」中生成并保存，这里会显示历史档案。</div>';
+        return;
+      }
+      box.innerHTML=arr.slice(0,5).map(function(r){
+        var name=r[1]||'未命名报告', at=String(r[2]||'').replace(/\.0$/,'');
+        return '<div class="au-arc-item"><b>'+esc(name)+'</b><span>'+esc(at)+'</span></div>';
+      }).join('');
+    }).catch(function(){
+      box.innerHTML='<div class="au-arc-empty">档案读取失败，请确认后端服务已启动。</div>';
+    });
+  }
+  function localHasData(){
+    try{
+      var s=JSON.parse(localStorage.getItem('chairRedStudy_v2')||'{}');
+      return Object.keys(s.startedLines||{}).length>0 || Object.keys(s.quiz||{}).length>0
+        || Object.keys(s.sort||{}).length>0 || Object.keys(s.open||{}).length>0
+        || Object.keys(s.observed||{}).length>0 || (s.name||'').length>0;
+    }catch(e){ return false; }
+  }
+  function restoreCloud(all){
+    var st;
+    try{ st=JSON.parse(all); }catch(e){ alert('服务端进度数据异常，暂不能恢复。'); return; }
+    localStorage.setItem('chairRedStudy_v2', JSON.stringify(st));
+    alert('已从服务端恢复研学进度，请刷新页面后生效。');
+  }
+  /* 登录/注册成功后：按本地与服务端的数据情况决定拉取还是上传，避免直接覆盖本地进度 */
+  function afterLogin(){
+    var local=localHasData();
+    window.RRX_API.getProgress().then(function(d){
+      var all=d&&d.lines&&d.lines['__all__'];
+      var hasCloud=!!(all&&all!=='{}');
+      if(!hasCloud){
+        if(local&&window.RRX_SYNC) window.RRX_SYNC.flush();
+        return;
+      }
+      if(!local){ restoreCloud(all); return; }
+      if(window.confirm('本地与服务端都有研学进度。\n确定：用服务端进度覆盖本地；\n取消：保留本地进度并上传到服务端。')){
+        restoreCloud(all);
+      }else if(window.RRX_SYNC){
+        window.RRX_SYNC.flush();
+      }
+    }).catch(function(){
+      if(local&&window.RRX_SYNC) window.RRX_SYNC.flush();
+    });
+  }
+  function pullCloud(){
+    if(!window.RRX_API.isLoggedIn()){ alert('请先登录账号。'); return; }
+    window.RRX_API.getProgress().then(function(d){
+      var all=d&&d.lines&&d.lines['__all__'];
+      if(!all||all==='{}'){ alert('服务端暂无研学进度记录。'); return; }
+      if(window.confirm('将用服务端进度覆盖本机进度，是否继续？')) restoreCloud(all);
+    }).catch(function(e){
+      var msg=(e&&e.message)||'拉取失败';
+      if(/Failed to fetch|NetworkError|Load failed|Network request failed/i.test(msg)) msg='无法连接后端服务，请确认后端已启动。';
+      alert(msg);
+    });
+  }
+
+  function updateBtn(){
+    var b=document.getElementById('rrxAccountBtn');
+    if(!b) return;
+    var u=readUser();
+    if(window.RRX_API.isLoggedIn()){
+      b.textContent=((u&&u.nickname)?u.nickname:'我的账号')+' · 个人中心';
+      b.title=(u&&u.phone)?('已登录：'+u.phone):'已登录账号';
+    }else{
+      b.textContent='登录 / 个人中心';
+      b.title='登录后进度与报告会保存到服务端数据库';
+    }
+  }
+
+  function init(){
+    var demo=!!window.RRX_DEMO;
+    if(demo){
+      var ab=document.getElementById('rrxAccountBtn');
+      if(ab) ab.style.display='none';
+      return;
+    }
+    updateBtn();
+    var b=document.getElementById('rrxAccountBtn');
+    if(b) b.onclick=function(){ openAuth('login'); };
+    window.addEventListener('rrx:unauthorized', function(){
+      writeUser(null); updateBtn();
+      if(ov&&ov.querySelector('.auth-user')){
+        pendingNotice='登录已过期，请重新登录。';
+        openAuth('login');
+      }
+    });
+    if(window.RRX_API.isLoggedIn()){
+      window.RRX_API.me().then(function(r){
+        if(r&&r.user){ writeUser(r.user); updateBtn(); }
+      }).catch(function(e){
+        if(e&&(/401/.test(e.message||'')||/未登录/.test(e.message||''))){
+          window.RRX_API.setToken(''); writeUser(null); updateBtn();
+        }
+      });
+    }
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
+})();
+</script>
+</body>
+</html>
