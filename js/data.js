@@ -38,6 +38,9 @@ const CHAIRS = [
     id:"jianshou", idx:"壹", name:"坚守之椅", person:"焦裕禄 · 兰考",
     tag:"藤椅 · 治沙三害", period:"1962—1964", img:"bg-jianshou", hot:0,
     subline:"一把被肝病顶出大洞的藤椅，一段把盐碱荒滩变成泡桐绿洲的岁月",
+    letter:{ title:"一把藤椅的自白",
+      body:"我是兰考县委办公室里的一把旧藤椅。主人肝病发作时，就把右脚踩上来、用右膝顶住我这里止痛，日子久了，我被顶出一个大洞；病痛缓下来，他又用藤条把我一点点补上。在兰考的 475 天里，他查风口、探流沙，跑遍全县 120 多个生产大队，唯独没有把自己算进去。",
+      from:"—— 据焦裕禄同志纪念馆史料与人民网、光明网报道情景化改写" },
     sources:["src-js-01","src-js-02","src-js-03","src-js-04","src-js-05","src-js-06","src-js-07","src-js-08","src-js-09","src-js-10","src-js-11","src-js-12","src-js-13","src-js-14","src-js-15"],
     identity:{
       cat:"A",
@@ -90,6 +93,9 @@ const CHAIRS = [
     id:"fumin", idx:"贰", name:"富民之椅", person:"邓小平 · 广安",
     tag:"木椅 · 农村改革", period:"1978—1984", img:"bg-fumin", hot:1,
     subline:"一把农家木凳，推开了家庭联产承包、让农户多劳多得的改革之门",
+    letter:{ title:"一张农家木凳的见证",
+      body:"我躺在广安牌坊村一座三合院的北厢房，少年时的他曾坐在我身边读书。后来他始终惦着一个问题：什么样的法子，能让农民愿意种、多种多得？1978 年冬天，小岗村 18 枚红手印，替他把这个问题答了出来。",
+      from:"—— 据邓小平故居与小岗村大包干史料情景化改写" },
     sources:["src-fm-01","src-fm-02","src-fm-03","src-fm-04","src-fm-05","src-fm-06","src-fm-07","src-fm-08","src-fm-09","src-fm-10"],
     identity:{
       cat:"C",
@@ -141,6 +147,9 @@ const CHAIRS = [
     id:"dangjia", idx:"叁", name:"当家之椅", person:"申纪兰 · 西沟",
     tag:"红绒椅 · 人民代表", period:"1946—2020", img:"bg-dangjia", hot:2,
     subline:"一把红绒椅，象征一位来自山区农村的人大代表，为农民和妇女履职六十余年",
+    letter:{ title:"一把红绒椅的分量",
+      body:"我不在某个人的家里，而在人民代表履职的位置上。她从西沟的梯田走进人民大会堂，一坐就是六十六年。她说：只有生活在农民中间，才知道他们的疾苦和需求，才能更好地替他们说话。",
+      from:"—— 据申纪兰口述史料情景化改写" },
     sources:["src-dj-01","src-dj-02","src-dj-03","src-dj-04","src-dj-05","src-dj-06","src-dj-07","src-dj-08","src-dj-09","src-dj-10"],
     identity:{
       cat:"C",
@@ -363,8 +372,11 @@ const AGRI = [
     today:"绿色产业与集体经济让村民人均纯收入约21800元。" }
 ];
 
+/* ---------- 乡村记忆卡素材 ---------- */
+const MEMORY_ITEMS = ["一张老照片","一件旧农具","一句方言","一首村歌","一棵老树","一口老井"];
+
 /* ---------- 本地存储 ---------- */
 const STORE_KEY = "chairRedStudy_v2";
 const STORE_VER = 2;
 
-window.RRX = { SOURCES, CHAIRS, QUIZZES, SORTS, OPENS, ROUTES, AGRI, STORE_KEY, STORE_VER };
+window.RRX = { SOURCES, CHAIRS, QUIZZES, SORTS, OPENS, ROUTES, AGRI, MEMORY_ITEMS, STORE_KEY, STORE_VER };

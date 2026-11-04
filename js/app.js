@@ -5,7 +5,7 @@
  * ============================================================ */
 (function(){
 "use strict";
-const { SOURCES, CHAIRS, QUIZZES, SORTS, OPENS, STORE_KEY, STORE_VER, ROUTES, AGRI } = window.RRX;
+const { SOURCES, CHAIRS, QUIZZES, SORTS, OPENS, MEMORY_ITEMS, STORE_KEY, STORE_VER, ROUTES, AGRI } = window.RRX;
 
 const root=document.getElementById('view-root');
 const crumbs=document.getElementById('crumbs');
@@ -44,7 +44,8 @@ function spiritIcon(t){if(/民生|当家|人民/.test(t))return icScale();if(/�
 /* ---------- 进度存储（容错） ---------- */
 function defaultState(){
   return { v:STORE_VER, name:"", startedLines:{}, observed:{}, sourcesViewed:{},
-           quiz:{}, sort:{}, open:{}, routeCheck:{}, completedLines:{}, reportAt:"" };
+           quiz:{}, sort:{}, open:{}, routeCheck:{}, completedLines:{}, reportAt:"",
+           pledge:{}, memoryCard:null, letterSeen:{} };
 }
 function loadState(){
   try{
@@ -168,15 +169,17 @@ function viewHome(){
   <section class="hero">
     <span class="kicker">红色乡村数字研学平台 · 2026 四川省大学生农业创意设计大赛</span>
     <h1>椅座 · <span class="red">红乡</span></h1>
-    <p class="sub">一把椅子，一段故事，一程乡村。</p>
+    <p class="sub-line">一把椅子，一段故事，一程乡村</p>
+    <p class="sub">坐下读懂三把椅子，起身留下助农行动</p>
     <div class="seq">
       <span class="seq-step"><b>坚守</b>焦裕禄</span><span class="seq-arrow"></span>
       <span class="seq-step"><b>富民</b>邓小平</span><span class="seq-arrow"></span>
       <span class="seq-step"><b>当家</b>申纪兰</span>
     </div>
+    <p class="sub" style="margin-top:10px;font-size:12.5px;opacity:.85">坚守是初心（为谁）· 富民是路径（怎么富）· 当家是主体（谁来振兴）</p>
     <div class="cta-row hero-cta">
       <button class="btn btn-primary" data-go="jianshou">走进红乡 ${icEnter()}</button>
-      <button class="btn btn-ghost" data-open-report>研学成果报告</button>
+      <button class="btn btn-ghost" data-open-report>乡村行动档案</button>
     </div>
     ${renderProgressChip()}
   </section>
@@ -209,12 +212,12 @@ function viewHome(){
     <summary>关于本项目 · 研学导览（为什么是“椅子”）</summary>
     <div class="intro-card">
       <p>这是一个面向农业农村主题的数字研学项目。我们以「一把椅子」为叙事入口，通过焦裕禄（兰考·治沙）、邓小平（广安·农村改革）、申纪兰（西沟·人民当家）三段人物故事与物象探索，理解历史实践与<strong>农业生产、农村发展、农民主体地位</strong>之间的联系。</p>
-      <p><strong>为什么是椅子？</strong>椅子象征「扎根」与「坐下的位置」：有人在椅子上顶住病痛坚守（藤椅），有人从农家木凳出发推动改革（木凳），有人把农民的声音端上殿堂（红绒椅）。物以载道——最平凡的家当，承载最不平凡的精神。</p>
+      <p><strong>为什么是椅子？</strong>三把椅子不是三件展品，而是三种「坐下来的位置」：坐到群众中间，才懂得坚守；坐到农家院里，才想明白富民；坐到村民当中，才明白乡村振兴要让农民自己当家。从焦裕禄的「坚守」到邓小平的「富民」，再到申纪兰的「当家」，是一条中国乡村从守住乡土、到小康之家、再到农业农村现代化的历史逻辑——<strong>乡土情怀是根，小康之家是路，农民当家是魂</strong>。研学的终点不是一份报告，而是把「坐下来的感动」变成「站起来的行动」。</p>
       <div class="intro-grid">
         <div class="intro-item"><b>① 物件观察</b><span>观察椅子细节，区分「有史料依据的事实」与「为帮助理解的设计表达」。</span></div>
         <div class="intro-item"><b>② 史料阅读</b><span>阅读人物背景、关键事件，并查看每条史料的来源与核验状态。</span></div>
         <div class="intro-item"><b>③ 任务闯关</b><span>历史事件排序、农业农村关联思考、知识小测。</span></div>
-        <div class="intro-item"><b>④ 研学成果</b><span>生成可打印的研学成果报告，记录你的作答与感悟。</span></div>
+        <div class="intro-item"><b>④ 行动档案</b><span>回答「椅子与我的关系」三问，生成乡村行动档案与你的行动宣言。</span></div>
       </div>
     </div>
   </details>
@@ -245,10 +248,31 @@ function srcList(line){
   };
   const first=allIds.slice(0,3).map(row).join('');
   const rest=allIds.slice(3).map((sid,i)=>row(sid,i+3)).join('');
-  return `<div class="src-list">
+  return `<div class="src-list src-main">
     <div class="src-title">史料来源（共 ${allIds.length} 条，均逐条打开原文核对；点击“查看来源”可打开权威原文）</div>
     ${first}
     ${allIds.length>3?`<details class="src-more"><summary>展开其余 ${allIds.length-3} 条来源</summary>${rest}</details>`:''}
+  </div>`;
+}
+
+/* ---------- 椅子与我：每条故事线末尾问一问（第六步） ---------- */
+const MEMORY_ICONS={"一张老照片":"🖼","一件旧农具":"🌾","一句方言":"🗣","一首村歌":"🎵","一棵老树":"🌳","一口老井":"💧"};
+function mcIcon(item){ return MEMORY_ICONS[item]||"📌"; }
+function chairPledgeAnswered(line){
+  const q=PLEDGE_QS.find(x=>x.chair===line);
+  return !!(q && state.pledge && state.pledge[q.key]);
+}
+function chairPledgeCard(line){
+  const q=PLEDGE_QS.find(x=>x.chair===line); if(!q) return '';
+  const p=state.pledge||{};
+  const opts=q.opts.map(o=>`<button class="pl-opt ${p[q.key]===o?'on':''}" data-pledge="${q.key}:${esc(o)}">${esc(o)}</button>`).join('');
+  const done=!!p[q.key];
+  return `<div class="chair-pledge ${done?'done':''}">
+    <div class="cp-h"><span class="cp-k">⑥ 椅子与我</span><b>${q.dim}</b><span class="cp-note">这一步不打分，只问你的选择</span></div>
+    <div class="cp-q">${q.q}</div>
+    <div class="pl-opts">${opts}</div>
+    ${done?`<div class="cp-done">已选：<b>${esc(p[q.key])}</b>　三问合成后会写进「研学落点」的行动宣言与乡村行动档案。</div>`
+           :`<div class="cp-hint">选一个就好——它不会判对错，但会写进你的行动档案。</div>`}
   </div>`;
 }
 
@@ -258,7 +282,7 @@ function studySection(line){
   const so=SORTS.find(s=>s.line===line);
   const op=OPENS.find(o=>o.line===line);
 
-  const quizHtml=qs.map(q=>{
+  const quizHtml=qs.map((q,qi)=>{
     const st=state.quiz[q.id]||{};
     const opts=q.opts.map((o,i)=>{
       let cls='opt';
@@ -282,7 +306,8 @@ function studySection(line){
     return `<div class="q-block" data-qblock="${q.id}">
       <div class="q-head">
         <span class="badge ${q.diff==='基础'?'ok':'pending'}">${q.diff}</span>
-        <span class="badge ok">${q.tag}</span></div>
+        <span class="badge ok">${q.tag}</span>
+        <span class="q-prog">第 ${qi+1}/${qs.length} 题</span></div>
       <div class="q-text">${q.q}</div>
       <div class="opts">${opts}</div>
       ${fb}
@@ -327,6 +352,7 @@ function studySection(line){
     sortHtml=`<div class="q-block">
       <div class="q-head"><span class="badge pending">历史事件排序</span><span class="badge ok">不做提示 · 凭史实判断</span></div>
       <div class="q-text">${so.title}</div>
+      <div class="q-tip">操作：点右侧 ↑↓ 调整位置，越靠上＝越早发生；提交前不会显示年份，排完点「提交排序」。</div>
       <div class="sort-list">${items}</div>
       ${fb}
       <div class="q-actions">
@@ -364,20 +390,22 @@ function studySection(line){
 
   return `<div class="study-box" data-study="${line}">
     <h4 class="study-h">研学任务</h4>
-    <p class="study-sub">按顺序完成五项：观察 → 读史料 → 排事件 → 想关联 → 做小测。全部完成后可生成研学成果报告。</p>
+    <p class="study-sub">按顺序完成六项：观察 → 读史料 → 排事件 → 想关联 → 做小测 → 答「椅子与我」。全部完成后可生成乡村行动档案。</p>
     <div class="study-flow">
       <span class="flow-step ${(state.observed[line]||[]).length?'done':''}"><b>①</b> 物件观察</span>
       <span class="flow-step ${(state.sourcesViewed[line]||[]).length?'done':''}"><b>②</b> 史料阅读</span>
       <span class="flow-step ${so&&state.sort[so.id]&&state.sort[so.id].submitted?'done':''}"><b>③</b> 事件排序</span>
       <span class="flow-step ${op&&state.open[op.id]&&state.open[op.id].text?'done':''}"><b>④</b> 农业关联</span>
       <span class="flow-step ${answered?'done':''}"><b>⑤</b> 知识小测</span>
+      <span class="flow-step ${chairPledgeAnswered(line)?'done':''}"><b>⑥</b> 椅子与我</span>
     </div>
     ${quizHtml}
     ${sortHtml}
     ${openHtml}
+    ${chairPledgeCard(line)}
     ${sum}
     <div class="q-actions">
-      <button class="btn btn-green" data-open-report>生成 / 查看研学成果报告</button>
+      <button class="btn btn-green" data-open-report>生成 / 查看乡村行动档案</button>
     </div>
   </div>`;
 }
@@ -456,6 +484,7 @@ function viewStory(id){
           <span class="tag">${c.idx} · ${c.tag} · ${c.period}</span>
           <h2>${c.name}</h2>
           <div class="subline">${c.person} —— ${c.subline}</div>
+          <button class="letter-again" data-letter-again="${c.id}">✉ 再读一次这把椅子的来信</button>
         </div>
       </div>
     </div>
@@ -466,16 +495,20 @@ function viewStory(id){
         <div class="id-card ${c.identity.cat==='A'?'cat-a':''}">
           <h5>${c.identity.title}</h5>
           <div class="row"><b>物件性质：</b>${c.identity.catLabel}</div>
+          <div class="cat-gloss">${c.identity.cat==='A'
+            ? 'A 类＝真的文物：原件在纪念馆里，本页图片是示意图。'
+            : 'C 类＝不是文物：为了把故事讲清楚而做的意象，别把它当历史实物。'}</div>
           <div class="line">${c.identity.desc}</div>
           <div class="facts"><b>有史料依据的事实：</b>${c.identity.facts}</div>
           <div class="descexp"><b>设计说明：</b>${c.identity.designNote} ${c.identity.designExp}</div>
-          <div class="src-list"><b>史料来源：</b>本节共引用 ${(c.sources||[]).length} 条权威来源，逐条列于下方「02 人物与历史背景 · 史料来源」，可点击打开原文核对。</div>
+          <div class="src-list"><b>史料来源：</b>本节共引用 ${(c.sources||[]).length} 条权威来源。<a href="javascript:;" class="jump-src" data-jump="src">跳到下方史料来源 ↓</a></div>
         </div>
         <div class="obs-grid">${obs}</div>
       </div>
 
       <div class="sec">
         <div class="sec-h"><span class="num">02</span><div><h4>人物与历史背景</h4><div class="sub">人物简介、关键事件与史料来源</div></div><div class="rule"></div></div>
+        <p class="sec-note">下面每条事实都挂了来源：点「查看来源」可打开党报 / 政府官网原文。共 ${(c.sources||[]).length} 条，前 3 条常显，其余可展开。</p>
         ${c.intro.map(p=>`<p>${p}</p>`).join('')}
         <div class="quote"><div class="q">${c.quote.q}</div><div class="q-src">${c.quote.src}</div></div>
         <div class="relic" data-relic>${relics}</div>
@@ -518,6 +551,58 @@ function viewStory(id){
   </section>`;
 }
 
+/* ---------- 椅子与我的关系：三问 → 行动宣言 ---------- */
+const PLEDGE_QS=[
+  { key:"q1", chair:"jianshou", dim:"乡土情怀", q:"坐进「坚守之椅」：如果这把椅子就在你村里，你愿意为谁守住什么？",
+    opts:["留守老人助餐","古树保护","村史记录","农产品包装"] },
+  { key:"q2", chair:"fumin", dim:"小康之家", q:"坐进「富民之椅」：一户农家眼下最需要的是什么？",
+    opts:["销路","技术","冷链","品牌","游客"] },
+  { key:"q3", chair:"dangjia", dim:"农民主体", q:"坐进「当家之椅」：这件事，该由谁来决定？",
+    opts:["村民点单、我来接单","村民议事会商议决定","返乡青年牵头","老农与村支书把关"] }
+];
+function pledgeText(){
+  const p=state.pledge||{};
+  const parts=[];
+  if(p.q1) parts.push('愿为村里守住「'+p.q1+'」');
+  if(p.q2) parts.push('认为一户农家眼下最需要「'+p.q2+'」');
+  if(p.q3) parts.push('相信这件事应由「'+p.q3+'」');
+  if(parts.length<3) return "";
+  return '我'+parts.join('，')+'。';
+}
+/* 三问解锁条件：必须先走进对应那把椅子，才能回答那一问 */
+function pledgeUnlocked(q){ return !!state.startedLines[q.chair]; }
+function pledgeMissing(){
+  const p=state.pledge||{};
+  return PLEDGE_QS.filter(q=>!p[q.key]).map(q=>({key:q.key, name:(CHAIRS.find(c=>c.id===q.chair)||{}).name||'',
+    locked:!pledgeUnlocked(q)}));
+}
+
+/* ---------- 第一人称信件：点击画卷上的椅子，先“坐下去”，再进入故事 ----------
+ * force=true 时忽略「已读过」标记，用于故事页的「再读一次」按钮 */
+function openLetter(line, force){
+  const c=CHAIRS.find(x=>x.id===line);
+  if(!c){ navTo(line); return; }
+  if(state.letterSeen[line] && !force){ navTo(line); return; }
+  const L=c.letter||{};
+  const ov=document.createElement('div'); ov.className='letter-overlay show';
+  ov.innerHTML=`<div class="letter-card" role="dialog" aria-label="${esc(c.name)}的一封信">
+    <div class="lt-tag">${esc(c.name)} · ${esc(c.person)}</div>
+    <h3>${esc(L.title||'')}</h3>
+    <p class="lt-body">${esc(L.body||'')}</p>
+    <div class="lt-from">${esc(L.from||'')}</div>
+    <div class="lt-note">以上为据权威史料的情景化改写，物件细节以纪念馆实物与说明为准。</div>
+    <div class="lt-actions">
+      <button class="btn btn-primary" data-lt-go>坐下，开始这段研学</button>
+      <button class="btn btn-ghost" data-lt-skip>跳过，直接进入</button>
+    </div>
+  </div>`;
+  document.body.appendChild(ov);
+  const go=()=>{ state.letterSeen[line]=true; saveState(); ov.remove(); navTo(line); };
+  ov.querySelector('[data-lt-go]').onclick=go;
+  ov.querySelector('[data-lt-skip]').onclick=go;
+  ov.addEventListener('click',e=>{ if(e.target===ov) go(); });
+}
+
 /* ---------- 渲染：落点页 ---------- */
 function viewFinal(){
   const started=CHAIRS.filter(c=>state.startedLines[c.id]);
@@ -527,25 +612,80 @@ function viewFinal(){
   if(!started.length){
     lead='三把椅子，三段旅程。你还没有走进任何一段——任选一把坐下，从这里开始。';
   }else if(done.length===CHAIRS.length){
-    lead='三把椅子，三段旅程，你已全部走完。五项研学任务都已完成，这里是旅程的落点：生成你的研学成果报告，或回到首页再看一遍。';
+    lead='三把椅子，三段旅程，你已全部走完。五项研学任务都已完成，这里是旅程的落点：生成你的乡村行动档案，或回到首页再看一遍。';
   }else if(started.length===CHAIRS.length){
-    lead=`三把椅子，三段旅程，你已走过：${names}。其中 ${done.length}/3&nbsp;条完成了全部研学任务——把剩下的题目做完，报告才算完整。`;
+    lead=`三把椅子，三段旅程，你已走过：${names}。其中 ${done.length}/3&nbsp;条完成了全部研学任务——把剩下的题目做完，档案才算完整。`;
   }else{
-    lead=`三把椅子，三段旅程，你已走过 ${started.length} 段：${names}。还有 ${3-started.length} 段没走——继续走完，报告里才会记录一段完整的研学。`;
+    lead=`三把椅子，三段旅程，你已走过 ${started.length} 段：${names}。还有 ${3-started.length} 段没走——继续走完，档案里才会记录一段完整的研学。`;
   }
   const chips=CHAIRS.map((c,i)=>{
     const on=!!state.startedLines[c.id], fin=!!state.completedLines[c.id];
     return `<div class="m-chip ${on?'on':''}"><div class="c-ic" style="background:${i===0?'rgba(200,68,42,.12)':i===1?'rgba(217,154,43,.16)':'rgba(95,143,74,.12)'};color:${i===0?'#c8442a':i===1?'#c07f1d':'#5f8f4a'}">${i===0?icShield():i===1?icSprout():icScale()}</div><b>${c.name}</b><span>${c.person}</span><span class="chip-state">${fin?'已完成':on?'进行中':'未走进'}</span></div>`;
   }).join('');
+  const p=state.pledge||{};
+  const pledgeQs=PLEDGE_QS.map((q,i)=>{
+    const open=pledgeUnlocked(q);
+    const chairName=(CHAIRS.find(c=>c.id===q.chair)||{}).name||'';
+    const opts=q.opts.map(o=>`<button class="pl-opt ${p[q.key]===o?'on':''}${open?'':' locked'}"
+        ${open?'':'disabled aria-disabled="true"'} data-pledge="${q.key}:${esc(o)}">${esc(o)}</button>`).join('');
+    const lockNote=open?'':`<div class="pl-lock">先走进「${chairName}」，才能回答这一问</div>`;
+    return `<div class="pledge-q ${open?'':'is-locked'}">
+      <div class="pl-h"><span class="pl-num">${['壹','贰','叁'][i]}</span><div class="pl-t"><b>${q.q}</b><span>${q.dim}</span></div></div>
+      <div class="pl-opts">${opts}</div>
+      ${lockNote}
+    </div>`;
+  }).join('');
+  const decl=pledgeText();
+  const missing=pledgeMissing();
+  const missingTxt=missing.map(m=>m.name+(m.locked?'（未走进）':'（已走进，尚未回答）')).join('、');
+  const declBlock=decl
+    ? `<div class="declare-card">
+         <div class="dc-tag">我的乡村行动宣言</div>
+         <p class="dc-text">“${esc(decl)}”</p>
+         <div class="dc-foot">坚守是初心，富民是路径，当家是主体 —— 从坐下来的感动，到站起来的行动。</div>
+         <button class="btn btn-green" data-share-pledge>分享我的宣言</button>
+       </div>`
+    : `<div class="declare-hint">${missingTxt?`还差：${esc(missingTxt)}。三问答完才能生成宣言——它写的是你的选择，不是一句口号。`:'回答上面三个问题，即可生成你的「乡村行动宣言」，并写入行动档案首页。'}</div>`;
+  const mc=state.memoryCard;
+  const mcOpts=(MEMORY_ITEMS||[]).map(m=>`<option ${mc&&mc.item===m?'selected':''}>${m}</option>`).join('');
+  const mcCard=mc
+    ? `<div class="memory-card">
+         <div class="mc-tag">乡村记忆卡</div>
+         <div class="mc-icon">${mcIcon(mc.item)}</div>
+         <div class="mc-item">${esc(mc.item)}</div>
+         <p class="mc-text">我替村里记住——“${esc(mc.text)}”</p>
+         <div class="mc-foot">${esc(state.name||'研学同学')} · ${esc(mc.at||'')}</div>
+         <button class="btn btn-ghost" data-mc-share>分享记忆卡</button>
+       </div>`
+    : '';
   return `
   <section class="final">
     <span class="badge">红色乡村数字研学 · 赓续红色血脉，设计赋能乡村</span>
     <h2>三把椅子，<span class="gold">一程</span><span class="red">红乡</span></h2>
-    <p class="lead">${lead}</p>
+    <p class="lead">舍不得群众，才懂得坚守；让群众富起来，才是富民；让群众自己说了算，才是当家。助农不是附加任务，而是三把椅子的当代续写——现在，轮到你回答「椅子与我的关系」。</p>
     <div class="merge">${chips}</div>
-    <div class="slogan">赓续红色血脉 · 设计赋能乡村<small>椅座·红乡 —— 一把椅子，一段故事，一程乡村；坐下的位置，站着的农民</small></div>
+    <p style="text-align:center;font-size:13px;color:var(--soil);margin-top:10px">${lead}</p>
+
+    <div class="pledge-block">
+      <h3 class="pl-title">三椅接力 · 椅子与我的关系</h3>
+      <div class="pledge-grid">${pledgeQs}</div>
+      ${declBlock}
+    </div>
+
+    <div class="pledge-block">
+      <h3 class="pl-title">乡村记忆卡 · 我替村里记住什么</h3>
+      <div class="memory-form">
+        <select id="mcItem" aria-label="选择记忆素材">${mcOpts}</select>
+        <input type="text" id="mcText" maxlength="40" placeholder="写一句你想替村里记住的话（40 字内）" value="${mc?esc(mc.text):''}">
+        <button class="btn btn-primary" data-mc-gen>生成记忆卡</button>
+      </div>
+      ${mcCard}
+    </div>
+
+    <div class="slogan">赓续红色血脉 · 设计赋能乡村<small>椅座·红乡 —— 坐下读懂三把椅子，起身留下助农行动</small></div>
     <div class="final-cta">
-      <button class="btn btn-primary" data-open-report>生成 / 查看研学成果报告</button>
+      <button class="btn btn-primary" data-open-report>生成 / 查看乡村行动档案</button>
+      <button class="btn btn-green" data-nav="passport">领取助农护照</button>
       <button class="restart" data-nav="home">${icRestart()} 回到首页继续研学</button>
     </div>
   </section>`;
@@ -680,20 +820,20 @@ function reportHTML(){
     {key:'sort',name:'事件排序',  ok:l=>{const s=SORTS.find(x=>x.line===l);return !s||(state.sort[s.id]&&state.sort[s.id].submitted);}},
     {key:'open', name:'农业关联',  ok:l=>{const o=OPENS.find(x=>x.line===l);return !o||(state.open[o.id]&&state.open[o.id].text&&state.open[o.id].text.trim().length>0);}}
   ];
-  let totalTasks=0, doneTasks=0; const missingList=[];
+  let totalTasks=0, doneTasks=0; const missingList=[]; const missingTasks=[];
   startedLines.forEach(c=>{
     taskDefs.forEach(t=>{
       totalTasks++;
       if(t.ok(c.id)) doneTasks++;
-      else missingList.push(`${c.name}·${t.name}`);
+      else { missingList.push(`${c.name}·${t.name}`); if(missingTasks.indexOf(t.name)<0) missingTasks.push(t.name); }
     });
   });
   const allDone=totalTasks>0 && doneTasks===totalTasks;
   const banner = totalTasks===0
-    ? `<div class="report-banner warn">你尚未进入任何故事线。本报告仅记录已进入故事线的实际作答情况。</div>`
+    ? `<div class="report-banner warn">你尚未进入任何故事线。本档案仅记录已进入故事线的实际作答情况。</div>`
     : allDone
       ? `<div class="report-banner ok">本次研学任务已全部完成（${doneTasks}/${totalTasks} 项）。</div>`
-      : `<div class="report-banner warn">本次研学为部分完成：已完成 ${doneTasks}/${totalTasks} 项任务。未完成：${missingList.join('、')}。</div>`;
+      : `<div class="report-banner warn">本次研学为部分完成：已完成 ${doneTasks}/${totalTasks} 项任务，还差 ${missingList.length} 项（${missingTasks.join('、')}）。未完成的部分不显示成绩，也不默认完成。</div>`;
 
   // S3：已进入故事线的物件身份说明
   const idBlocks = startedLines.map(c=>{
@@ -701,8 +841,20 @@ function reportHTML(){
     return `<div class="row"><b>${esc(c.name)} · 物件身份：</b>${esc(id.catLabel||'')}。${esc(id.desc||'')} ${esc(id.designNote||'')}</div>`;
   }).join('');
 
+  const pDecl=pledgeText();
+  const p=state.pledge||{};
+  const pAction=(p.q1&&p.q2&&p.q3)
+    ? `<div class="row"><b>我为村里留下的动作：</b>把「${esc(p.q1)}」这件事，用「${esc(p.q2)}」的办法，交给「${esc(p.q3)}」——它对应一个具体的村、一件具体的事，而不是一句口号。</div>`
+    : '';
+  const pledgeBlock=pDecl
+    ? `<div class="pledge-in-report"><div class="pr-tag">我的乡村行动宣言</div><p>“${esc(pDecl)}”</p><div class="pr-foot">坚守是初心，富民是路径，当家是主体 —— 乡土情怀是根，小康之家是路，农民当家是魂。</div></div>${pAction}`
+    : '';
+  const mcRow=state.memoryCard
+    ? `<div class="row"><b>乡村记忆卡：</b>${esc(state.memoryCard.item)} —— “${esc(state.memoryCard.text)}”</div>`
+    : '';
+
   return `
-  <h3>研学成果报告</h3>
+  <h3>乡村行动档案</h3>
   <div class="r-sub">椅座·红乡 · 红色乡村数字研学平台 · 生成时间 ${date}</div>
   ${banner}
   <label for="rname">你的姓名 / 昵称（必填，登录后随报告保存到服务端）</label>
@@ -711,6 +863,7 @@ function reportHTML(){
   <div class="report-doc" id="reportDoc">
     <div class="row"><b>研学学员：</b>${name?esc(name):'（未填写）'}</div>
     <div class="row"><b>研学日期：</b>${date}</div>
+    ${pledgeBlock}${mcRow}
     <div class="row"><b>已进入故事线：</b>${lines.length?lines.map(c=>c.name).join('、'):'（尚未进入任何故事线）'}</div>
     <h4>物件身份说明</h4>
     ${idBlocks||'<div class="row muted">（尚未进入任何故事线）</div>'}
@@ -722,7 +875,7 @@ function reportHTML(){
     ${openRows}
     <h4>研学过程中查看过的史料来源</h4>
     <ul style="margin-left:18px;font-size:13px;line-height:1.9;color:#3a2c1f">${srcAll||'<li>（尚未查看史料来源）</li>'}</ul>
-    <div class="storage-note">本报告由系统根据你的实际作答记录生成：未作答的任务不显示成绩、不默认完成；未填写的感悟不会自动补写。${DEMO?'':'未登录时暂存于当前浏览器，登录后保存到服务端数据库。'}</div>
+    <div class="storage-note">本档案由系统根据你的实际作答记录生成：未作答的任务不显示成绩、不默认完成；未填写的感悟不会自动补写。行动宣言与记忆卡来自你在「三椅接力」中的真实选择。${DEMO?'':'未登录时暂存于当前浏览器，登录后保存到服务端数据库。'}</div>
   </div>
   <div class="report-actions">
     <button class="btn btn-primary" data-gen-report>生成 / 更新报告</button>
@@ -736,7 +889,7 @@ function openReport(){
   let ov=document.querySelector('.report-overlay');
   if(!ov){
     ov=document.createElement('div'); ov.className='report-overlay';
-    ov.innerHTML='<div class="report-modal" role="dialog" aria-label="研学成果报告"></div>';
+    ov.innerHTML='<div class="report-modal" role="dialog" aria-label="乡村行动档案"></div>';
     document.body.appendChild(ov);
     ov.addEventListener('click',e=>{ if(e.target===ov) closeReport(); });
   }
@@ -780,8 +933,9 @@ function shareRoute(line){
 function shareReport(){
   const name=state.name||'研学同学';
   const done=Object.keys(state.completedLines).length;
-  const text=name+' 在「椅座·红乡」完成红色乡村数字研学，已走完 '+done+'/'+CHAIRS.length+' 条故事线，并生成了研学成果报告。';
-  shareText('椅座·红乡 · 研学成果报告',text,location.href.split('#')[0]+'#final');
+  const decl=pledgeText();
+  const text=name+' 在「椅座·红乡」坐过三把椅子，已走完 '+done+'/'+CHAIRS.length+' 条故事线，生成了乡村行动档案。'+(decl?'我的行动宣言：'+decl:'');
+  shareText('椅座·红乡 · 乡村行动档案',text,location.href.split('#')[0]+'#final');
 }
 function shareText(title,text,url){
   if(navigator.share){
@@ -800,7 +954,12 @@ function shareText(title,text,url){
 function bind(){
   // 导航
   document.querySelectorAll('[data-nav]').forEach(el=>el.onclick=()=>navTo(el.dataset.nav==='home'?'':el.dataset.nav));
-  document.querySelectorAll('[data-go]').forEach(el=>el.onclick=()=>navTo(el.dataset.go));
+  document.querySelectorAll('[data-go]').forEach(el=>{
+    const go=el.dataset.go;
+    // 故事内的「上一把/下一把」不打断叙事，直接跳转；其余入口统一先"坐下"（弹第一人称信件）
+    if(el.closest('.story-nav')){ el.onclick=()=>navTo(go); }
+    else el.onclick=()=>openLetter(go);
+  });
   document.querySelectorAll('[data-open-report]').forEach(el=>el.onclick=openReport);
 
   // 走线研学：打卡 / 分享
@@ -830,9 +989,48 @@ function bind(){
   });
 
   document.querySelectorAll('.hot').forEach(el=>{
-    el.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();navTo(el.dataset.go);}};
+    el.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openLetter(el.dataset.go);}};
   });
-  document.querySelectorAll('.river .knot').forEach(k=>{ k.onclick=()=>navTo(k.dataset.knot); });
+  document.querySelectorAll('.river .knot').forEach(k=>{ k.onclick=()=>openLetter(k.dataset.knot); });
+  // 故事页「再读一次来信」：忽略已读标记，强制弹出
+  document.querySelectorAll('[data-letter-again]').forEach(b=>{
+    b.onclick=e=>{ e.stopPropagation(); openLetter(b.dataset.letterAgain, true); };
+  });
+  // 「跳到史料来源」
+  document.querySelectorAll('[data-jump="src"]').forEach(a=>{
+    a.onclick=e=>{ e.preventDefault(); const t=document.querySelector('.src-main'); if(t) t.scrollIntoView({behavior:'smooth',block:'center'}); };
+  });
+
+  // 三椅接力：三问选择 → 行动宣言
+  document.querySelectorAll('[data-pledge]').forEach(btn=>{
+    btn.onclick=()=>{
+      const sep=btn.dataset.pledge.indexOf(':');
+      const k=btn.dataset.pledge.slice(0,sep), v=btn.dataset.pledge.slice(sep+1);
+      state.pledge[k]=v; saveState(); render();
+    };
+  });
+  const spBtn=document.querySelector('[data-share-pledge]');
+  if(spBtn) spBtn.onclick=()=>{
+    shareText('椅座·红乡 · 我的乡村行动宣言',
+      pledgeText()+' 从坐下来的感动，到站起来的行动。',
+      location.href.split('#')[0]+'#final');
+  };
+  // 乡村记忆卡
+  const mcGen=document.querySelector('[data-mc-gen]');
+  if(mcGen) mcGen.onclick=()=>{
+    const sel=document.getElementById('mcItem'), inp=document.getElementById('mcText');
+    const t=(inp.value||'').trim();
+    if(!t){ inp.focus(); return; }
+    state.memoryCard={ item:sel.value, text:t, at:new Date().toLocaleString('zh-CN') };
+    saveState(); render();
+  };
+  const mcShare=document.querySelector('[data-mc-share]');
+  if(mcShare) mcShare.onclick=()=>{
+    const m=state.memoryCard; if(!m) return;
+    shareText('椅座·红乡 · 乡村记忆卡',
+      '【乡村记忆卡】'+m.item+' —— 我替村里记住：“'+m.text+'”',
+      location.href.split('#')[0]);
+  };
 
   const pano=document.getElementById('pano');
   if(pano){
@@ -1050,11 +1248,80 @@ function initIntro(){
   setTimeout(done,6000);
 }
 
+/* ---------- 助农护照：三条线 + 三问 + 记忆卡，合成一页可截图/可打印的凭证 ---------- */
+function viewPassport(){
+  const p=state.pledge||{};
+  const mc=state.memoryCard;
+  const doneN=CHAIRS.filter(c=>state.completedLines[c.id]).length;
+  const startN=CHAIRS.filter(c=>state.startedLines[c.id]).length;
+  const rows=CHAIRS.map((c,i)=>{
+    const st=state.startedLines[c.id], fin=state.completedLines[c.id];
+    const ok=fin?'已完成':(st?'进行中':'未走进');
+    const stamp=fin?'✓':(st?'·':'');
+    return `<div class="pp-row ${fin?'on':st?'half':''}">
+      <div class="pp-stamp">${stamp}</div>
+      <div class="pp-line">
+        <b>${c.name}</b><i>${c.person}</i>
+      </div>
+      <div class="pp-state">${ok}</div>
+    </div>`;
+  }).join('');
+  const qs=PLEDGE_QS.map((q,i)=>{
+    const v=p[q.key];
+    return `<div class="pp-q"><span>${['壹','贰','叁'][i]}</span><div><b>${q.dim}</b><em>${v?esc(v):'（未回答）'}</em></div></div>`;
+  }).join('');
+  const decl=pledgeText();
+  return `
+  <section class="passport-page">
+    <div class="passport" id="passportCard">
+      <div class="pp-top">
+        <div class="pp-brand">椅座 · 红乡</div>
+        <div class="pp-title">助 农 护 照</div>
+        <div class="pp-sub">一条红色乡村研学线 · 一份可以带走的凭证</div>
+      </div>
+      <div class="pp-meta">
+        <span>持照人：<b>${esc(state.name||'研学学员')}</b></span>
+        <span>签发：${new Date().toLocaleDateString('zh-CN')}</span>
+        <span>线路：兰考 / 广安 / 西沟</span>
+      </div>
+      <div class="pp-body">
+        <div class="pp-left">
+          <div class="pp-h">三椅足迹</div>
+          ${rows}
+          <div class="pp-progress">已走进 ${startN}/3 · 已完成 ${doneN}/3</div>
+        </div>
+        <div class="pp-right">
+          <div class="pp-h">三问与我的行动</div>
+          ${qs}
+          ${decl?`<div class="pp-decl">${esc(decl)}</div>`:'<div class="pp-decl muted">三问答完后，这里会出现你的行动宣言。</div>'}
+        </div>
+      </div>
+      <div class="pp-bottom">
+        <div class="pp-mc">
+          <div class="pp-h">我替村里记住</div>
+          ${mc?`<div class="pp-mc-item">${mcIcon(mc.item)} ${esc(mc.item)}</div><div class="pp-mc-text">“${esc(mc.text)}”</div>`
+              :'<div class="pp-mc-text muted">还没有生成乡村记忆卡（在「研学落点」里可以写一张）</div>'}
+        </div>
+        <div class="pp-seal">
+          <div class="seal-ring"><span>椅座<br>红乡</span></div>
+          <div class="pp-seal-note">本护照由系统按真实作答生成<br>未完成的部分如实标注</div>
+        </div>
+      </div>
+    </div>
+    <div class="pp-actions">
+      <button class="btn btn-primary" onclick="window.print()">打印 / 存为 PDF</button>
+      <button class="btn btn-ghost" data-nav="final">返回研学落点</button>
+      <button class="btn btn-ghost" data-nav="home">回到首页</button>
+    </div>
+  </section>`;
+}
+
 function render(){
   const h=location.hash.replace('#','');
   root.innerHTML='';
   if(_dyn){ cancelAnimationFrame(_dyn); _dyn=null; }
   if(h==='final'){ root.innerHTML=viewFinal(); renderCrumbs('final'); }
+  else if(h==='passport'){ root.innerHTML=viewPassport(); renderCrumbs('final'); }
   else if(h&&CHAIRS.some(c=>c.id===h)){ root.innerHTML=viewStory(h); renderCrumbs(h); }
   else{ root.innerHTML=viewHome(); renderCrumbs(''); initIntro(); }
   bind();
