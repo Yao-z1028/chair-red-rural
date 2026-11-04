@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>椅座·红乡 · 红色乡村数字研学平台</title>
-<meta name="description" content="以三把椅子为叙事入口的红色乡村数字研学平台：第一人称信件、物件观察、史料阅读、事件排序、农业农村关联与知识测验、三问行动宣言，生成乡村行动档案。">
+<meta name="description" content="以三把椅子为叙事入口的红色乡村数字研学平台：物件观察、史料阅读、事件排序、农业农村关联与知识测验，生成研学成果报告。">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23C8442A'/><path d='M9 22 L9 11 M9 11 Q9 7 13 7 L19 7 Q23 7 23 11 L23 22 M9 12 L23 12 M9 19 L23 19' stroke='%23F4C96B' stroke-width='2.4' fill='none' stroke-linecap='round'/><path d='M7 25 L25 25' stroke='%23F4C96B' stroke-width='2' stroke-linecap='round'/></svg>">
-<link rel="stylesheet" href="css/style.css?v=20261104a">
+<link rel="stylesheet" href="css/style.css?v=20261105c">
 <script>
 /* 演示模式：默认开启（静态部署 / 双击打开 / ?demo=1），保证评委打开即可完整使用；
    本地联调后端时在地址后加 ?server=1 即切回服务端模式 */
@@ -36,24 +36,24 @@
   </button>
   <div class="nav-right">
     <div class="crumbs" id="crumbs"></div>
-    <button class="nav-link report" data-open-report>乡村行动档案</button>
+    <button class="nav-link report" data-open-report>研学成果报告</button>
     <button class="nav-link account" id="rrxAccountBtn">登录 / 个人中心</button>
   </div>
 </nav>
 <div id="view-root" aria-live="polite"></div>
 <div id="intro-overlay" class="intro-overlay" aria-hidden="true"></div>
 
-<script src="js/data.js?v=20261104a"></script>
-<script src="js/api.js?v=20261104a"></script>
+<script src="js/data.js?v=20261105c"></script>
+<script src="js/api.js?v=20261105c"></script>
 <script>
 // 启动：从后端拉取内容；若后端未启动，则用内置 data.js 兜底并提示启动服务
 window.RRX_BOOT().then(function(){
   var s=document.createElement('script');
-  s.src='js/app.js?v=20261104a';
+  s.src='js/app.js?v=20261105c';
   document.body.appendChild(s);
 }).catch(function(){
   var s=document.createElement('script');
-  s.src='js/app.js?v=20261104a';
+  s.src='js/app.js?v=20261105c';
   document.body.appendChild(s);
 });
 </script>
@@ -362,7 +362,7 @@ window.RRX_BOOT().then(function(){
       var arr=(d&&d.reports)||[];
       if(cnt) cnt.textContent=arr.length+' 份';
       if(!arr.length){
-        box.innerHTML='<div class="au-arc-empty">还没有保存的档案。完成研学后在「乡村行动档案」中生成并保存，这里会显示历史档案。</div>';
+        box.innerHTML='<div class="au-arc-empty">还没有保存的报告。完成研学后在「研学成果报告」中生成并保存，这里会显示历史档案。</div>';
         return;
       }
       box.innerHTML=arr.slice(0,5).map(function(r){
