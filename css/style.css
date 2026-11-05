@@ -79,11 +79,10 @@ button{font-family:var(--sans)}
 
 /* 画卷主视觉 */
 .pano-wrap{max-width:1200px;margin:22px auto 0;padding:0 18px}
-.pano{position:relative;border-radius:20px;overflow:hidden;box-shadow:0 22px 60px -24px rgba(107,74,47,.55);background:#000}
-.bg-pano{width:100%;aspect-ratio:4/1;background-image:url('../assets/images/panorama.jpg');background-size:cover;background-position:center}
-.bg-jianshou{background-image:url('../assets/images/base_jianshou.jpg')}
-.bg-fumin{background-image:url('../assets/images/base_fumin.jpg')}
-.bg-dangjia{background-image:url('../assets/images/base_dangjia.jpg')}
+.pano{position:relative;border-radius:20px;overflow:hidden;box-shadow:0 22px 60px -24px rgba(107,74,47,.55);background:#F3E7D2}
+
+
+
 .pano .veil-b{position:absolute;left:0;right:0;bottom:0;height:34%;z-index:2;pointer-events:none;background:linear-gradient(180deg,transparent,rgba(20,12,6,.82))}
 .dynscene{position:absolute;inset:0;z-index:3;pointer-events:none;overflow:hidden}
 #dynCanvas{position:absolute;inset:0;width:100%;height:100%;display:block}
@@ -126,9 +125,6 @@ button{font-family:var(--sans)}
 .story-hero{position:relative;max-width:1200px;margin:24px auto 0;padding:0 18px}
 .story-hero .frame{position:relative;border-radius:20px;overflow:hidden;box-shadow:0 20px 55px -24px rgba(107,74,47,.55);background:#000;aspect-ratio:16/8}
 .story-hero .frame>.bg{width:100%;aspect-ratio:16/8;background-size:cover;background-position:center;transition:filter .8s ease}
-.bg-jianshou-past{background-image:url('../assets/images/base_jianshou_past.jpg')}
-.bg-fumin-past{background-image:url('../assets/images/base_fumin_past.jpg')}
-.bg-dangjia-past{background-image:url('../assets/images/base_dangjia_past.jpg')}
 .story-hero .cmp{position:absolute;inset:0;z-index:1;cursor:ew-resize;touch-action:none}
 .story-hero .cmp .cmp-bg,.story-hero .cmp .cmp-over{position:absolute;inset:0;background-size:cover;background-position:center}
 .story-hero .cmp .cmp-over{will-change:clip-path}
@@ -414,7 +410,7 @@ textarea:focus{border-color:var(--gold-deep);outline:none}
 .intro-overlay{position:fixed;inset:0;z-index:2000;background:#1a120c;display:flex;align-items:center;justify-content:center;overflow:hidden;
   opacity:0;pointer-events:none;transition:opacity .6s ease}
 .intro-overlay.show{opacity:1;pointer-events:auto}
-.intro-overlay .in-pano{position:absolute;inset:0;background-image:url('../assets/images/panorama.jpg');background-size:cover;background-position:center;
+.intro-overlay .in-pano{position:absolute;inset:0;background-image:url('../assets/images/panorama.jpg');background-image:image-set(url('../assets/images/panorama.webp') type("image/webp"),url('../assets/images/panorama.jpg') type("image/jpeg"));background-size:cover;background-position:center;
   opacity:0;transform:scale(1.08);transition:opacity 1.4s ease,transform 2.4s ease}
 .intro-overlay.show .in-pano{opacity:.55;transform:scale(1)}
 .intro-overlay .in-mask{position:absolute;inset:0;background:linear-gradient(180deg,rgba(26,18,12,.55) 0%,rgba(26,18,12,.35) 50%,rgba(26,18,12,.85) 100%)}
@@ -678,7 +674,6 @@ textarea:focus{border-color:var(--gold-deep);outline:none}
   .progress-note{font-size:11.5px}
 
   .pano-wrap{padding:0 12px;margin-top:14px}
-  .bg-pano{aspect-ratio:16/9}
   .pano .hint{font-size:10px;padding:4px 9px;max-width:62%;letter-spacing:.02em}
   .pano .axis{display:none}
   .hot .pill{font-size:11px;padding:6px 9px;gap:4px}
@@ -987,3 +982,25 @@ textarea:focus{border-color:var(--gold-deep);outline:none}
   .passport-page{margin:0;padding:0;max-width:100%}
   .passport{box-shadow:none;border-width:2px}
 }
+
+/* ===== 背景图（webp 优先，jpg 回退）===== */
+.bg-pano{width:100%;aspect-ratio:4/1;background-size:cover;background-position:center}
+.bg-pano{background-image:url('../assets/images/panorama.jpg')}
+.bg-pano{background-image:image-set(url('../assets/images/panorama.webp') type("image/webp"),url('../assets/images/panorama.jpg') type("image/jpeg"))}
+.bg-jianshou{background-image:url('../assets/images/base_jianshou.jpg')}
+.bg-jianshou{background-image:image-set(url('../assets/images/base_jianshou.webp') type("image/webp"),url('../assets/images/base_jianshou.jpg') type("image/jpeg"))}
+.bg-jianshou-past{background-image:url('../assets/images/base_jianshou_past.jpg')}
+.bg-jianshou-past{background-image:image-set(url('../assets/images/base_jianshou_past.webp') type("image/webp"),url('../assets/images/base_jianshou_past.jpg') type("image/jpeg"))}
+.bg-fumin{background-image:url('../assets/images/base_fumin.jpg')}
+.bg-fumin{background-image:image-set(url('../assets/images/base_fumin.webp') type("image/webp"),url('../assets/images/base_fumin.jpg') type("image/jpeg"))}
+.bg-fumin-past{background-image:url('../assets/images/base_fumin_past.jpg')}
+.bg-fumin-past{background-image:image-set(url('../assets/images/base_fumin_past.webp') type("image/webp"),url('../assets/images/base_fumin_past.jpg') type("image/jpeg"))}
+.bg-dangjia{background-image:url('../assets/images/base_dangjia.jpg')}
+.bg-dangjia{background-image:image-set(url('../assets/images/base_dangjia.webp') type("image/webp"),url('../assets/images/base_dangjia.jpg') type("image/jpeg"))}
+.bg-dangjia-past{background-image:url('../assets/images/base_dangjia_past.jpg')}
+.bg-dangjia-past{background-image:image-set(url('../assets/images/base_dangjia_past.webp') type("image/webp"),url('../assets/images/base_dangjia_past.jpg') type("image/jpeg"))}
+
+/* 移动端椅子卡用小图（480px），避免首屏拉三张大图 */
+.cc-bg.bg-jianshou{background-image:url('../assets/images/base_jianshou_card.jpg');background-image:image-set(url('../assets/images/base_jianshou_card.webp') type("image/webp"),url('../assets/images/base_jianshou_card.jpg') type("image/jpeg"))}
+.cc-bg.bg-fumin{background-image:url('../assets/images/base_fumin_card.jpg');background-image:image-set(url('../assets/images/base_fumin_card.webp') type("image/webp"),url('../assets/images/base_fumin_card.jpg') type("image/jpeg"))}
+.cc-bg.bg-dangjia{background-image:url('../assets/images/base_dangjia_card.jpg');background-image:image-set(url('../assets/images/base_dangjia_card.webp') type("image/webp"),url('../assets/images/base_dangjia_card.jpg') type("image/jpeg"))}
