@@ -956,9 +956,9 @@ function bind(){
   document.querySelectorAll('[data-nav]').forEach(el=>el.onclick=()=>navTo(el.dataset.nav==='home'?'':el.dataset.nav));
   document.querySelectorAll('[data-go]').forEach(el=>{
     const go=el.dataset.go;
-    // 故事内的「上一把/下一把」不打断叙事，直接跳转；其余入口统一先"坐下"（弹第一人称信件）
-    if(el.closest('.story-nav')){ el.onclick=()=>navTo(go); }
-    else el.onclick=()=>openLetter(go);
+    // 所有入口（含故事页的「上一把／下一把」）统一走 openLetter：
+    // 没读过就弹信，读过则直接跳转（openLetter 内部处理）
+    el.onclick=()=>openLetter(go);
   });
   document.querySelectorAll('[data-open-report]').forEach(el=>el.onclick=openReport);
 
@@ -1245,7 +1245,7 @@ function initIntro(){
   ov.querySelector('[data-into-main]').onclick=done;
   ov.querySelector('[data-into-skip]').onclick=done;
   // 自动播完兜底（约 6s）
-  setTimeout(done,6000);
+  setTimeout(done,3200);
 }
 
 /* ---------- 助农护照：三条线 + 三问 + 记忆卡，合成一页可截图/可打印的凭证 ---------- */
@@ -1316,8 +1316,11 @@ function viewPassport(){
   </section>`;
 }
 
+let _lastHash=null;
 function render(){
   const h=location.hash.replace('#','');
+  const isNav=(_lastHash!==h);   // 只有"换页"才滚到顶，作答重绘不滚
+  _lastHash=h;
   root.innerHTML='';
   if(_dyn){ cancelAnimationFrame(_dyn); _dyn=null; }
   if(h==='final'){ root.innerHTML=viewFinal(); renderCrumbs('final'); }
@@ -1325,6 +1328,17 @@ function render(){
   else if(h&&CHAIRS.some(c=>c.id===h)){ root.innerHTML=viewStory(h); renderCrumbs(h); }
   else{ root.innerHTML=viewHome(); renderCrumbs(''); initIntro(); }
   bind();
+  if(isNav){
+    // 立即回到顶部：页面 CSS 有 scroll-behavior:smooth，必须显式 instant，否则会"慢慢滑上去"
+    try{ window.scrollTo({top:0,left:0,behavior:'instant'}); }
+    catch(e){
+      const html=document.documentElement;
+      const prev=html.style.scrollBehavior;
+      html.style.scrollBehavior='auto';
+      window.scrollTo(0,0);
+      html.style.scrollBehavior=prev;
+    }
+  }
 }
 window.addEventListener('hashchange',render);
 render();
